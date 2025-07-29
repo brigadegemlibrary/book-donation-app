@@ -55,7 +55,7 @@ document.getElementById('donationForm').onsubmit = async (e) => {
     console.log("📤 Sending to Google Form...");
     await fetch(formUrl, {
       method: "POST",
-      mode: "no-cors",
+      //mode: "no-cors",
       body: formBody
     });
     console.log("✅ Google Form submission done");
