@@ -1,0 +1,106 @@
+// YOUR_EMAILJS_PUBLIC_KEY = aPsEgCkKhiXYR5VQW
+// YOUR_TEMPLATE_ID= template_abc456
+// YOUR_SERVICE_ID= service_gmail123
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Library Book Donation</title>
+  <style>
+    video, canvas { max-width: 100%; border: 1px solid #333; margin-bottom: 10px; }
+    form input { display: block; margin: 5px 0; width: 100%; max-width: 400px; }
+  </style>
+</head>
+<body>
+  <h2>📸 Take Picture of Book Cover</h2>
+  <video id="video" autoplay playsinline></video><br/>
+  <button id="snapBtn">📷 Capture</button>
+  <canvas id="canvas" style="display:none;"></canvas>
+  <button id="ocrBtn">🔍 Extract Book Title</button>
+
+  <h2>📝 Donation Form</h2>
+  <form id="donationForm">
+    <label>Book Title: <input name="title" required></label>
+    <label>Author: <input name="author"></label>
+    <label>Publishing House: <input name="pubhouse"></label>
+    <label>Genre: <input name="genre"></label>
+    <label>Edition: <input name="edition"></label>
+    <label>Year of Publication: <input name="year"></label>
+    <label>Flat No: <input name="flat" required></label>
+    <label>Donor Name: <input name="name" required></label>
+    <label>Email: <input name="email" type="email" required></label>
+    <label>Phone: <input name="phone" type="tel"></label>
+    <button type="submit">✅ Submit Donation</button>
+  </form>
+
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@2.1.5/dist/tesseract.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/emailjs-com@2.6.4/dist/email.min.js"></script>
+  <script>
+    const video = document.getElementById("video");
+    const canvas = document.getElementById("canvas");
+    const snapBtn = document.getElementById("snapBtn");
+    const ocrBtn = document.getElementById("ocrBtn");
+    const form = document.getElementById("donationForm");
+    const ctx = canvas.getContext("2d");
+
+    emailjs.init("aPsEgCkKhiXYR5VQW");
+
+    // Open camera
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
+      .then(stream => video.srcObject = stream)
+      .catch(err => alert("Camera access error: " + err));
+
+    // Capture to canvas
+    snapBtn.onclick = () => {
+      canvas.style.display = "block";
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    };
+
+    // OCR the image
+    ocrBtn.onclick = async () => {
+      const blob = await new Promise(res => canvas.toBlob(res, "image/jpeg"));
+      const { data: { text } } = await Tesseract.recognize(blob, "eng");
+      const firstLine = text.split("\n").find(line => line.trim().length > 3);
+      if (firstLine) document.querySelector('input[name="title"]').value = firstLine.trim();
+      else alert("Could not detect text. Try again with a clearer photo.");
+    };
+
+    form.addEventListener("submit", async function (e) {
+      e.preventDefault();
+      const fd = new FormData(this);
+      const p = {
+        title: fd.get("title"), flat: fd.get("flat"),
+        name: fd.get("name"), email: fd.get("email"), phone: fd.get("phone"),
+        author: fd.get("author"), pubhouse: fd.get("pubhouse"),
+        genre: fd.get("genre"), edition: fd.get("edition"), year: fd.get("year")
+      };
+
+      // Submit to Google Form
+      const formURL = "https://docs.google.com/forms/d/e/1FAIpQLSfD6XxQaH-_VUY425YdmehytiYOLMDxVBKHvAr-z6d_x29C5w/viewform?usp=header";
+      const entry = {
+        title: "entry.X1", flat: "entry.X2", name: "entry.X3", email: "entry.X4", phone: "entry.X5",
+        author: "entry.X6", pubhouse: "entry.X7", genre: "entry.X8", edition: "entry.X9", year: "entry.X10"
+      };
+      const params = new URLSearchParams();
+      for (const k in entry) params.append(entry[k], p[k]);
+
+      await fetch(formURL, { method: "POST", mode: "no-cors", body: params });
+
+      // Send confirmation email
+      await emailjs.send("service_gmail123", "template_abc456", {
+        donor_name: p.name,
+        book_title: p.title,
+        donor_email: p.email
+      });
+
+      alert("🎉 Donation submitted and email sent. Thank you!");
+      form.reset();
+      canvas.style.display = "none";
+    });
+  </script>
+</body>
+</html>
