@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -70,24 +69,45 @@
       e.preventDefault();
       const fd = new FormData(this);
       const p = {
-        title: fd.get("title"), flat: fd.get("flat"),
-        name: fd.get("name"), email: fd.get("email"), phone: fd.get("phone"),
-        author: fd.get("author"), pubhouse: fd.get("pubhouse"),
-        genre: fd.get("genre"), edition: fd.get("edition"), year: fd.get("year")
+        title: fd.get("title"),
+        flat: fd.get("flat"),
+        name: fd.get("name"),
+        email: fd.get("email"),
+        phone: fd.get("phone"),
+        author: fd.get("author"),
+        pubhouse: fd.get("pubhouse"),
+        genre: fd.get("genre"),
+        edition: fd.get("edition"),
+        year: fd.get("year")
       };
 
       // Submit to Google Form
-      const formURL = "https://docs.google.com/forms/d/e/1FAIpQLSfD6XxQaH-_VUY425YdmehytiYOLMDxVBKHvAr-z6d_x29C5w/viewform?usp=header";
-      const entry = {
-        title: "entry.X1", flat: "entry.X2", name: "entry.X3", email: "entry.X4", phone: "entry.X5",
-        author: "entry.X6", pubhouse: "entry.X7", genre: "entry.X8", edition: "entry.X9", year: "entry.X10"
-      };
-      const params = new URLSearchParams();
-      for (const k in entry) params.append(entry[k], p[k]);
+      const formURL = "https://docs.google.com/forms/d/e/1FAIpQLSfD6XxQaH-_VUY425YdmehytiYOLMDxVBKHvAr-z6d_x29C5w/formResponse";
+      const params = new URLSearchParams({
+        'entry.2005620554': p.title,
+        'entry.207535114': p.flat,
+        'entry.1065046570': p.name,
+        'entry.1045781291': p.email,
+        'entry.1166974658': p.phone,
+        'entry.839337160': p.author,
+        'entry.1484740013': p.pubhouse,
+        'entry.730415916': p.genre,
+        'entry.1852618071': p.edition,
+        'entry.1624577213': p.year,
+        'fvv': '1',
+        'partialResponse': '[null,null,"8310545277951149816"]',
+        'pageHistory': '0',
+        'fbzx': '8310545277951149816'
+      });
 
-      await fetch(formURL, { method: "POST", mode: "no-cors", body: params });
+      await fetch(formURL, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: params.toString()
+      });
 
-      // Send confirmation email
+      // Send confirmation email via EmailJS
       await emailjs.send("service_gmail123", "template_abc456", {
         donor_name: p.name,
         book_title: p.title,
