@@ -1,120 +1,56 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF‑8" />
-  <meta name="viewport" content="width=device‑width, initial‑scale=1.0" />
-  <title>Book Scan & Donate</title>
-  <style>
-    body { font-family: sans-serif; max-width: 600px; margin: auto; padding: 1rem; }
-    video, canvas { width: 100%; margin-top: 1em; }
-    button, input, select { width: 100%; margin-top: 0.5em; padding: 0.5em; font-size: 1rem; }
-    label { display: block; margin-top: 1em; }
-    #ocrStatus { margin-top: 0.5em; font-weight: bold; color: #555; }
-  </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Donate a Book</title>
+  <link rel="stylesheet" href="style.css"/>
 </head>
 <body>
-  <h1>📚 Scan & Donate a Book</h1>
-  <video id="video" autoplay playsinline muted></video>
-  <button id="captureBtn">📸 Capture</button>
-  <button id="extractBtn" disabled>🔍 Extract Title</button>
-  <p id="ocrStatus"></p>
+  <h1>📚 Donate a Book</h1>
 
-  <form id="bookForm" action="https://docs.google.com/forms/d/e/1FAIpQLSfD6XxQaH-_VUY425YdmehytiYOLMDxVBKHvAr-z6d_x29C5w/formResponse" method="POST">
-    <label>📖 Book Title
-      <input name="entry.2005620554" id="title" required />
-    </label>
-    <label>🏢 Flat No
-      <input name="entry.207535114" required />
-    </label>
-    <label>👤 Donor Name
-      <input name="entry.1065046570" required />
-    </label>
-    <label>📧 Email
-      <input type="email" name="entry.1045781291" required />
-    </label>
-    <label>📞 Phone
-      <input type="tel" name="entry.1166974658" required />
-    </label>
-    <label>✍️ Author
-      <input name="entry.839337160" />
-    </label>
-    <label>🏛️ Publishing House
-      <input name="entry.1484740013" />
-    </label>
-    <label>📚 Genre
-      <input list="genreOptions" name="entry.730415916" required />
-      <datalist id="genreOptions">
-        <option>📖 Fiction</option>
-        <option>🌍 Travel / Culture</option>
-        <option>👶 Children’s Books (Age 3–12)</option>
-        <option>🧠 Self‑help</option>
-        <option>🎓 Educational / Academic</option>
-        <option>📘 Non‑fiction</option>
-        <option>📕 Young Adult</option>
-      </datalist>
-    </label>
-    <label>🔢 Edition
-      <input name="entry.1852618071" />
-    </label>
-    <label>📅 Year of Publication
-      <input type="number" name="entry.1624577213" />
-    </label>
-    <button type="submit">✅ Submit Donation</button>
+  <video id="camera" autoplay playsinline></video>
+  <button id="captureBtn">📸 Capture</button>
+  <canvas id="canvas" style="display: none;"></canvas>
+  <img id="preview" alt="Captured image will appear here"/>
+
+  <button id="extractBtn">🔍 Extract Title</button>
+  <p><strong>Detected Title:</strong> <input type="text" id="title"/></p>
+
+  <form id="donationForm">
+    <input type="text" placeholder="Your Name" required id="name" />
+    <input type="email" placeholder="Your Email" required id="email" />
+    <input type="tel" placeholder="Your Phone" required id="phone" />
+    <input type="text" placeholder="Flat Number" required id="code" />
+    <input type="text" placeholder="Author" required id="author" />
+    <input type="text" placeholder="Publisher" required id="publisher" />
+    <input type="text" placeholder="Edition and Year" required id="edition" />
+    
+    <select id="genre" required>
+      <option value="">📚 Select Genre</option>
+      <option>📖 Fiction (novels, short stories)</option>
+      <option>📚 Non-Fiction (biographies, self-help, history)</option>
+      <option>🧘 Mindfulness / Wellness / Spiritual</option>
+      <option>🚀 Science & Technology</option>
+      <option>🌍 Travel / Culture</option>
+      <option>🏡 Home, Gardening, Lifestyle</option>
+      <option>🎨 Art, Design & Photography</option>
+      <option>📈 Business, Startups, Finance</option>
+      <option>👶 Children’s Books (Age 3–12)</option>
+      <option>🧒 Young Adult / Teen (Age 13–18)</option>
+      <option>🗞️ Magazines (Nat Geo, Reader’s Digest, etc.)</option>
+      <option>📝 Educational / Exam Prep</option>
+      <option>🔤 Language Learning (e.g., English-Hindi, vocabulary)</option>
+    </select>
+    
+    <button type="submit">✅ Submit</button>
   </form>
 
-  <canvas id="canvas" style="display:none;"></canvas>
-
-  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@2.1.5/dist/tesseract.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.0.2/dist/tesseract.min.js"></script>
+  <script src="https://cdn.emailjs.com/dist/email.min.js"></script>
   <script>
-    const video = document.getElementById('video');
-    const canvas = document.getElementById('canvas');
-    const captureBtn = document.getElementById('captureBtn');
-    const extractBtn = document.getElementById('extractBtn');
-    const status = document.getElementById('ocrStatus');
-
-    async function startCamera() {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: { exact: "environment" } }
-        });
-        video.srcObject = stream;
-      } catch (e) {
-        console.warn('Rear camera unavailable, using default.', e);
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-        video.srcObject = stream;
-      }
-    }
-    startCamera();
-
-    captureBtn.onclick = () => {
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      canvas.getContext('2d').drawImage(video, 0, 0);
-      extractBtn.disabled = false;
-      status.textContent = '';
-    };
-
-    extractBtn.onclick = async () => {
-      status.textContent = '🔍 Extracting text…';
-      extractBtn.disabled = true;
-
-      const blob = await new Promise(res => canvas.toBlob(res, 'image/jpeg'));
-      try {
-        const { data: { text } } = await Tesseract.recognize(blob, 'eng');
-        const firstLine = text.split('\n').find(line => line.trim().length > 3);
-        if (firstLine) {
-          document.getElementById('title').value = firstLine.trim();
-          status.textContent = '✅ Title extracted!';
-        } else {
-          status.textContent = '⚠️ No text found. Try again.';
-        }
-      } catch (err) {
-        console.error(err);
-        status.textContent = '❌ OCR failed.';
-      } finally {
-        extractBtn.disabled = false;
-      }
-    };
+    emailjs.init("aPsEgCkKhiXYR5VQW");
   </script>
+  <script src="script.js"></script>
 </body>
 </html>
