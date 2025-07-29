@@ -3,121 +3,111 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Library Book Donation</title>
+  <title>Book Donor Form</title>
   <style>
-    video, canvas { max-width: 100%; border: 1px solid #333; margin-bottom: 10px; }
-    form input { display: block; margin: 5px 0; width: 100%; max-width: 400px; }
+    body {
+      font-family: sans-serif;
+      padding: 20px;
+      background: #f9f9f9;
+      text-align: center;
+    }
+    video, canvas {
+      max-width: 100%;
+      border: 1px solid #ccc;
+      margin-bottom: 10px;
+    }
+    button {
+      padding: 10px 16px;
+      font-size: 1em;
+      margin: 5px;
+      cursor: pointer;
+    }
+    input[type="text"], input[type="email"] {
+      width: 90%;
+      max-width: 400px;
+      padding: 10px;
+      margin: 5px auto;
+      display: block;
+      font-size: 1em;
+    }
+    form {
+      background: #fff;
+      padding: 20px;
+      margin-top: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
   </style>
 </head>
 <body>
-  <h2>📸 Take Picture of Book Cover</h2>
-  <video id="video" autoplay playsinline></video><br/>
-  <button id="snapBtn">📷 Capture</button>
-  <canvas id="canvas" style="display:none;"></canvas>
-  <button id="ocrBtn">🔍 Extract Book Title</button>
 
-  <h2>📝 Donation Form</h2>
-  <form id="donationForm">
-    <label>Book Title: <input name="title" required></label>
-    <label>Author: <input name="author"></label>
-    <label>Publishing House: <input name="pubhouse"></label>
-    <label>Genre: <input name="genre"></label>
-    <label>Edition: <input name="edition"></label>
-    <label>Year of Publication: <input name="year"></label>
-    <label>Flat No: <input name="flat" required></label>
-    <label>Donor Name: <input name="name" required></label>
-    <label>Email: <input name="email" type="email" required></label>
-    <label>Phone: <input name="phone" type="tel"></label>
-    <button type="submit">✅ Submit Donation</button>
+  <h1>📚 Donate a Book</h1>
+
+  <p>Step 1: Capture the book cover</p>
+  <video id="video" width="300" height="200" autoplay></video><br>
+  <button id="capture">Capture</button>
+  <canvas id="canvas" width="300" height="200" style="display: none;"></canvas>
+
+  <p>Step 2: Extract Title from Cover</p>
+  <button id="ocr">Extract Title</button>
+  <p id="ocrStatus" style="margin-top: 8px; font-weight: bold; color: #555;"></p>
+
+  <form action="https://docs.google.com/forms/d/e/1FAIpQLSfD6XxQaH-_VUY425YdmehytiYOLMDxVBKHvAr-z6d_x29C5w/formResponse" method="POST" target="_blank">
+    <input type="text" name="entry.2005620554" placeholder="Book Title" required />
+    <input type="text" name="entry.207535114" placeholder="Your Name" required />
+    <input type="text" name="entry.1065046570" placeholder="School/Org (if any)" />
+    <input type="text" name="entry.1166974658" placeholder="Phone Number" />
+    <input type="email" name="entry.1045781291" placeholder="Email" />
+    <input type="text" name="entry.839337160" placeholder="Author" />
+    <input type="text" name="entry.1484740013" placeholder="Publisher" />
+    <input type="text" name="entry.1852618071" placeholder="Edition (optional)" />
+    <input type="text" name="entry.1624577213" placeholder="Number on back page (optional)" />
+    <input type="text" name="entry.730415916" placeholder="Genre (e.g. Fiction, Kids, History)" />
+
+    <button type="submit">Submit</button>
   </form>
 
-  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@2.1.5/dist/tesseract.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/emailjs-com@2.6.4/dist/email.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.1.1/dist/tesseract.min.js"></script>
   <script>
     const video = document.getElementById("video");
     const canvas = document.getElementById("canvas");
-    const snapBtn = document.getElementById("snapBtn");
-    const ocrBtn = document.getElementById("ocrBtn");
-    const form = document.getElementById("donationForm");
-    const ctx = canvas.getContext("2d");
+    const context = canvas.getContext("2d");
+    const captureBtn = document.getElementById("capture");
+    const ocrBtn = document.getElementById("ocr");
 
-    emailjs.init("aPsEgCkKhiXYR5VQW");
+    // Start video stream
+    navigator.mediaDevices.getUserMedia({ video: true })
+      .then(stream => { video.srcObject = stream; })
+      .catch(err => console.error("Camera access denied:", err));
 
-    // Open camera
-    navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
-      .then(stream => video.srcObject = stream)
-      .catch(err => alert("Camera access error: " + err));
-
-    // Capture to canvas
-    snapBtn.onclick = () => {
+    // Capture photo
+    captureBtn.onclick = () => {
       canvas.style.display = "block";
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
     };
 
     // OCR the image
     ocrBtn.onclick = async () => {
+      const status = document.getElementById("ocrStatus");
+      status.textContent = "🔍 Extracting text... Please wait.";
+
       const blob = await new Promise(res => canvas.toBlob(res, "image/jpeg"));
-      const { data: { text } } = await Tesseract.recognize(blob, "eng");
-      const firstLine = text.split("\n").find(line => line.trim().length > 3);
-      if (firstLine) document.querySelector('input[name="title"]').value = firstLine.trim();
-      else alert("Could not detect text. Try again with a clearer photo.");
+
+      try {
+        const { data: { text } } = await Tesseract.recognize(blob, "eng");
+        const firstLine = text.split("\n").find(line => line.trim().length > 3);
+
+        if (firstLine) {
+          document.querySelector('input[name="entry.2005620554"]').value = firstLine.trim();
+          status.textContent = "✅ Title extracted!";
+        } else {
+          status.textContent = "⚠️ Could not detect text. Try again with a clearer photo.";
+        }
+      } catch (err) {
+        console.error(err);
+        status.textContent = "❌ OCR failed. Please retry.";
+      }
     };
-
-    form.addEventListener("submit", async function (e) {
-      e.preventDefault();
-      const fd = new FormData(this);
-      const p = {
-        title: fd.get("title"),
-        flat: fd.get("flat"),
-        name: fd.get("name"),
-        email: fd.get("email"),
-        phone: fd.get("phone"),
-        author: fd.get("author"),
-        pubhouse: fd.get("pubhouse"),
-        genre: fd.get("genre"),
-        edition: fd.get("edition"),
-        year: fd.get("year")
-      };
-
-      // Submit to Google Form
-      const formURL = "https://docs.google.com/forms/d/e/1FAIpQLSfD6XxQaH-_VUY425YdmehytiYOLMDxVBKHvAr-z6d_x29C5w/formResponse";
-      const params = new URLSearchParams({
-        'entry.2005620554': p.title,
-        'entry.207535114': p.flat,
-        'entry.1065046570': p.name,
-        'entry.1045781291': p.email,
-        'entry.1166974658': p.phone,
-        'entry.839337160': p.author,
-        'entry.1484740013': p.pubhouse,
-        'entry.730415916': p.genre,
-        'entry.1852618071': p.edition,
-        'entry.1624577213': p.year,
-        'fvv': '1',
-        'partialResponse': '[null,null,"8310545277951149816"]',
-        'pageHistory': '0',
-        'fbzx': '8310545277951149816'
-      });
-
-      await fetch(formURL, {
-        method: "POST",
-        mode: "no-cors",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: params.toString()
-      });
-
-      // Send confirmation email via EmailJS
-      await emailjs.send("service_gmail123", "template_abc456", {
-        donor_name: p.name,
-        book_title: p.title,
-        donor_email: p.email
-      });
-
-      alert("🎉 Donation submitted and email sent. Thank you!");
-      form.reset();
-      canvas.style.display = "none";
-    });
   </script>
 </body>
 </html>
