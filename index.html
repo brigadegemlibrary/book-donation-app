@@ -1,130 +1,120 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Book Scanner Form</title>
+  <meta charset="UTF‑8" />
+  <meta name="viewport" content="width=device‑width, initial‑scale=1.0" />
+  <title>Book Scan & Donate</title>
   <style>
-    body {
-      font-family: sans-serif;
-      max-width: 600px;
-      margin: auto;
-      padding: 1rem;
-    }
-    label {
-      display: block;
-      margin-top: 1em;
-    }
-    input, select, button {
-      width: 100%;
-      padding: 0.5em;
-      font-size: 1rem;
-    }
-    video {
-      width: 100%;
-      margin-top: 1em;
-    }
+    body { font-family: sans-serif; max-width: 600px; margin: auto; padding: 1rem; }
+    video, canvas { width: 100%; margin-top: 1em; }
+    button, input, select { width: 100%; margin-top: 0.5em; padding: 0.5em; font-size: 1rem; }
+    label { display: block; margin-top: 1em; }
+    #ocrStatus { margin-top: 0.5em; font-weight: bold; color: #555; }
   </style>
 </head>
 <body>
   <h1>📚 Scan & Donate a Book</h1>
+  <video id="video" autoplay playsinline muted></video>
+  <button id="captureBtn">📸 Capture</button>
+  <button id="extractBtn" disabled>🔍 Extract Title</button>
+  <p id="ocrStatus"></p>
 
-  <video id="camera" autoplay playsinline></video>
-
-  <button onclick="captureAndFill()">📷 Scan Book Cover</button>
-
-  <form id="bookForm" action="https://docs.google.com/forms/d/e/1FAIpQLSfD6XxQaH-_VUY425YdmehytiYOLMDxVBKHvAr-z6d_x29C5w/formResponse" method="POST" target="_self">
-    
+  <form id="bookForm" action="https://docs.google.com/forms/d/e/1FAIpQLSfD6XxQaH-_VUY425YdmehytiYOLMDxVBKHvAr-z6d_x29C5w/formResponse" method="POST">
     <label>📖 Book Title
-      <input name="entry.2005620554" id="title" required>
+      <input name="entry.2005620554" id="title" required />
     </label>
-
     <label>🏢 Flat No
-      <input name="entry.207535114" required>
+      <input name="entry.207535114" required />
     </label>
-
     <label>👤 Donor Name
-      <input name="entry.1065046570" required>
+      <input name="entry.1065046570" required />
     </label>
-
     <label>📧 Email
-      <input type="email" name="entry.1045781291" required>
+      <input type="email" name="entry.1045781291" required />
     </label>
-
     <label>📞 Phone
-      <input type="tel" name="entry.1166974658" required>
+      <input type="tel" name="entry.1166974658" required />
     </label>
-
     <label>✍️ Author
-      <input name="entry.839337160">
+      <input name="entry.839337160" />
     </label>
-
     <label>🏛️ Publishing House
-      <input name="entry.1484740013">
+      <input name="entry.1484740013" />
     </label>
-
     <label>📚 Genre
-      <select name="entry.730415916">
+      <input list="genreOptions" name="entry.730415916" required />
+      <datalist id="genreOptions">
         <option>📖 Fiction</option>
-        <option>🔬 Science</option>
         <option>🌍 Travel / Culture</option>
-        <option>🎨 Art & Design</option>
-        <option>👶 Children</option>
-        <option>🧠 Self-help / Psychology</option>
-        <option>🌱 Environment</option>
-        <option>📘 Biography</option>
-        <option>📖 Other</option>
-      </select>
+        <option>👶 Children’s Books (Age 3–12)</option>
+        <option>🧠 Self‑help</option>
+        <option>🎓 Educational / Academic</option>
+        <option>📘 Non‑fiction</option>
+        <option>📕 Young Adult</option>
+      </datalist>
     </label>
-
     <label>🔢 Edition
-      <input name="entry.1852618071">
+      <input name="entry.1852618071" />
     </label>
-
     <label>📅 Year of Publication
-      <input type="number" name="entry.1624577213">
+      <input type="number" name="entry.1624577213" />
     </label>
-
-    <button type="submit">✅ Submit</button>
+    <button type="submit">✅ Submit Donation</button>
   </form>
 
   <canvas id="canvas" style="display:none;"></canvas>
 
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@2.1.5/dist/tesseract.min.js"></script>
   <script>
-    // Rear camera preference
-    navigator.mediaDevices.getUserMedia({
-      video: { facingMode: { exact: "environment" } }
-    }).then(stream => {
-      document.getElementById('camera').srcObject = stream;
-    }).catch(err => {
-      console.error("Error accessing camera: ", err);
-    });
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const captureBtn = document.getElementById('captureBtn');
+    const extractBtn = document.getElementById('extractBtn');
+    const status = document.getElementById('ocrStatus');
 
-    // OCR API
-    async function captureAndFill() {
-      const video = document.getElementById('camera');
-      const canvas = document.getElementById('canvas');
+    async function startCamera() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: { exact: "environment" } }
+        });
+        video.srcObject = stream;
+      } catch (e) {
+        console.warn('Rear camera unavailable, using default.', e);
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        video.srcObject = stream;
+      }
+    }
+    startCamera();
+
+    captureBtn.onclick = () => {
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(video, 0, 0);
+      canvas.getContext('2d').drawImage(video, 0, 0);
+      extractBtn.disabled = false;
+      status.textContent = '';
+    };
 
-      const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg'));
-      const formData = new FormData();
-      formData.append("file", blob);
-      formData.append("language", "eng");
-      formData.append("apikey", "helloworld");
+    extractBtn.onclick = async () => {
+      status.textContent = '🔍 Extracting text…';
+      extractBtn.disabled = true;
 
-      const response = await fetch("https://api.ocr.space/parse/image", {
-        method: "POST",
-        body: formData
-      });
-
-      const result = await response.json();
-      const parsedText = result?.ParsedResults?.[0]?.ParsedText || "";
-      const lines = parsedText.split("\n").map(l => l.trim()).filter(Boolean);
-      document.getElementById("title").value = lines[0] || "";
-    }
+      const blob = await new Promise(res => canvas.toBlob(res, 'image/jpeg'));
+      try {
+        const { data: { text } } = await Tesseract.recognize(blob, 'eng');
+        const firstLine = text.split('\n').find(line => line.trim().length > 3);
+        if (firstLine) {
+          document.getElementById('title').value = firstLine.trim();
+          status.textContent = '✅ Title extracted!';
+        } else {
+          status.textContent = '⚠️ No text found. Try again.';
+        }
+      } catch (err) {
+        console.error(err);
+        status.textContent = '❌ OCR failed.';
+      } finally {
+        extractBtn.disabled = false;
+      }
+    };
   </script>
 </body>
 </html>
