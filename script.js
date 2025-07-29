@@ -24,6 +24,7 @@ extractBtn.onclick = async () => {
 
 document.getElementById('donationForm').onsubmit = async (e) => {
   e.preventDefault();
+  console.log("✅ Submit button clicked");
 
   const formData = {
     code: document.getElementById('code').value,
@@ -36,7 +37,7 @@ document.getElementById('donationForm').onsubmit = async (e) => {
     rfid: titleInput.value,
     genre: document.getElementById('genre').value
   };
-
+  console.log("📦 Collected form data:", formData);
   const formUrl = "https://docs.google.com/forms/d/e/1FAIpQLSfD6XxQaH-_VUY425YdmehytiYOLMDxVBKHvAr-z6d_x29C5w/formResponse";
 
   const formBody = new URLSearchParams({
@@ -50,21 +51,31 @@ document.getElementById('donationForm').onsubmit = async (e) => {
     'entry.1624577213': formData.rfid,
     'entry.730415916': formData.genre
   });
+  try {
+    console.log("📤 Sending to Google Form...");
+    await fetch(formUrl, {
+      method: "POST",
+      mode: "no-cors",
+      body: formBody
+    });
+    console.log("✅ Google Form submission done");
 
-  await fetch(formUrl, {
-    method: "POST",
-    mode: "no-cors",
-    body: formBody
-  });
+    console.log("📧 Sending confirmation email via EmailJS...");
+    await emailjs.send("service_gmail123", "template_abc456", {
+      user_name: formData.name,
+      user_email: formData.email,
+      message: `Thanks for donating "${formData.rfid}". We've received it!`
+    });
+    console.log("✅ Email sent");
 
-  await emailjs.send("service_gmail123", "template_abc456", {
-    user_name: formData.name,
-    user_email: formData.email,
-    message: `Thanks for donating "${formData.rfid}". We've received it!`
-  });
+    alert("🎉 Thank you for your donation!");
 
-  alert("🎉 Thank you for your donation!");
-  document.getElementById('donationForm').reset();
-  titleInput.value = '';
-  preview.src = '';
+    // Reset form
+    document.getElementById('donationForm').reset();
+    document.getElementById('title').value = '';
+    document.getElementById('preview').src = '';
+  } catch (err) {
+    console.error("❌ Error occurred during submission:", err);
+    alert("⚠️ Something went wrong. Please try again.");
+  }
 };
