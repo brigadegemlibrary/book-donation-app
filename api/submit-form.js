@@ -12,14 +12,25 @@ const formPointers = {
     publishingHouse: 'entry.1484740013',
     genre: 'entry.730415916',
     edition: 'entry.1852618071',
-    year: 'entry.1624577213'
+    year: 'entry.1624577213',
+    date_year: 'entry.561351992_year',
+    date_month: 'entry.561351992_month',
+    date_day: 'entry.561351992_day'
 };
 
 module.exports = async (request, response) => {
     try {
-        const { title, flatNumber, name, email, phone, author, publishingHouse, genre, edition, year } = request.body;
+        const { date, title, flatNumber, name, email, phone, author, publishingHouse, genre, edition, year } = request.body;
+
+        const dateObj = new Date(date);
+        const day = dateObj.getDate();
+        const month = dateObj.getMonth() + 1; // getMonth() is zero-based
+        const fullYear = dateObj.getFullYear();
 
         const formParams = new URLSearchParams();
+        formParams.append(formPointers.date_year, fullYear);
+        formParams.append(formPointers.date_month, month);
+        formParams.append(formPointers.date_day, day);
         formParams.append(formPointers.title, title);
         formParams.append(formPointers.flatNumber, flatNumber);
         formParams.append(formPointers.name, name);

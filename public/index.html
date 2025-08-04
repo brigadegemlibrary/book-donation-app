@@ -3,28 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Book Donation Program</title>
+    <title>Book Donation App</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="container">
         <h1>Book Donation Program</h1>
-        <p>Donate a book to the library by simply taking a picture of it!</p>
 
         <div class="card">
-            <h2>Step 1: Capture or Upload Book Image</h2>
-            <div class="image-input-container">
-                <input type="file" id="image-upload" accept="image/*" capture="camera">
-                <label for="image-upload">Take Picture / Upload</label>
-            </div>
-            <div class="image-preview">
-                <img id="book-image-preview" src="#" alt="Book cover preview" style="display: none;">
-            </div>
+            <h3>Step 1: Capture or Upload Book Image</h3>
+            <input type="file" id="image-upload" accept="image/*">
+            <button id="take-picture-btn">Take Picture</button>
+            <img id="book-image-preview" src="#" alt="Book Image Preview" style="display:none;">
         </div>
 
         <div class="card">
-            <h2>Step 2: Extract Book Details</h2>
-            <button id="extract-btn">Extract Title, Author & Edition</button>
+            <h3>Step 2: Extract Book Details</h3>
+            <button id="extract-btn" disabled>Extract Title, Author & Edition</button>
             <form id="donation-form">
                 <label for="book-title">Book Title:</label>
                 <input type="text" id="book-title" required>
@@ -37,33 +32,27 @@
 
                 <label for="book-edition">Edition:</label>
                 <input type="text" id="book-edition">
-
+                
                 <label for="book-year">Year of Publication:</label>
                 <input type="number" id="book-year" min="1000" max="2099">
 
                 <label for="book-genre">Genre:</label>
-                <select id="book-genre">
-                    <option value="">--Select a Genre--</option>
-                    <option value="Fiction">📖 Fiction (novels, short stories)</option>
-                    <option value="Non-Fiction">📚 Non-Fiction (biographies, self-help, history)</option>
-                    <option value="Mindfulness / Wellness / Spiritual">🧘 Mindfulness / Wellness / Spiritual</option>
-                    <option value="Science & Technology">🚀 Science & Technology</option>
-                    <option value="Travel / Culture">🌍 Travel / Culture</option>
-                    <option value="Home, Gardening, Lifestyle">🏡 Home, Gardening, Lifestyle</option>
-                    <option value="Art, Design & Photography">🎨 Art, Design & Photography</option>
-                    <option value="Business, Startups, Finance">📈 Business, Startups, Finance</option>
-                    <option value="Children's Books">👶 Children’s Books (Age 3–12)</option>
-                    <option value="Young Adult / Teen">🧒 Young Adult / Teen (Age 13–18)</option>
-                    <option value="Magazines">🗞️ Magazines (Nat Geo, Reader’s Digest, etc.)</option>
-                    <option value="Educational / Exam Prep">📝 Educational / Exam Prep</option>
-                    <option value="Language Learning">🔤 Language Learning (e.g., English-Hindi, vocabulary)</option>
+                <select id="book-genre" required>
+                    <option value="" disabled selected>--Select a Genre--</option>
+                    <option value="Fiction">Fiction</option>
+                    <option value="Non-Fiction">Non-Fiction</option>
+                    <option value="Fantasy">Fantasy</option>
+                    <option value="Sci-Fi">Sci-Fi</option>
                 </select>
             </form>
         </div>
 
         <div class="card">
-            <h2>Step 3: Donor Details</h2>
+            <h3>Step 3: Donor Details</h3>
             <form id="donor-form">
+                <label for="todays-date">Date:</label>
+                <input type="text" id="todays-date" readonly>
+
                 <label for="donor-name">Your Name:</label>
                 <input type="text" id="donor-name" required>
 
@@ -71,22 +60,18 @@
                 <input type="email" id="donor-email" required>
 
                 <label for="donor-phone">Your Phone:</label>
-                <input type="tel" id="donor-phone">
+                <input type="tel" id="donor-phone" required>
 
                 <label for="flat-number">Flat Number:</label>
                 <input type="text" id="flat-number" required>
-
-                <label for="todays-date">Date:</label>
-                <input type="text" id="todays-date" readonly>
             </form>
         </div>
 
         <button id="submit-form-btn">Submit Donation</button>
     </div>
 
-    <script src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js'></script>
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
-
+    <script src='https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js'></script>
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
