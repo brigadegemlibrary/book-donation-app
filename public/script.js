@@ -30,10 +30,10 @@ imageUpload.addEventListener('change', (event) => {
     }
 });
 
-// B. OCR Functionality (Extract Button)
+// B. OCR Functionality (Extract Button) - UPDATED
 extractBtn.addEventListener('click', async () => {
-    const image = bookImagePreview.src;
-    if (image.includes('#')) {
+    const imageFile = imageUpload.files[0];
+    if (!imageFile) {
         alert('Please upload an image first.');
         return;
     }
@@ -41,35 +41,29 @@ extractBtn.addEventListener('click', async () => {
     extractBtn.disabled = true;
     extractBtn.innerText = 'Extracting...';
 
-    const worker = await Tesseract.createWorker('eng');
-    const { data: { text } } = await worker.recognize(image);
-    await worker.terminate();
+    const formData = new FormData();
+    formData.append('image', imageFile);
 
-    const lines = text.split('\n').filter(line => line.trim() !== '');
-    let title = '';
-    let author = '';
-    let edition = '';
+    try {
+        const response = await fetch('/api/ocr', {
+            method: 'POST',
+            body: formData,
+        });
 
-    if (lines.length > 0) {
-        title = lines[0];
-        for (let i = 1; i < lines.length; i++) {
-            const line = lines[i];
-            if (line.toLowerCase().includes('by')) {
-                author = line.replace(/by/i, '').trim();
-            }
-            if (line.toLowerCase().includes('edition')) {
-                edition = line.replace(/edition/i, '').trim();
-            }
-        }
+        const extractedData = await response.json();
+
+        document.getElementById('book-title').value = extractedData.title || '';
+        document.getElementById('book-author').value = extractedData.author || '';
+        document.getElementById('book-edition').value = extractedData.edition || '';
+
+        alert('Extraction complete. Please review the details and edit if necessary.');
+    } catch (error) {
+        console.error('Error during OCR extraction:', error);
+        alert('An error occurred during OCR. Please try again.');
+    } finally {
+        extractBtn.disabled = false;
+        extractBtn.innerText = 'Extract Title, Author & Edition';
     }
-
-    document.getElementById('book-title').value = title;
-    document.getElementById('book-author').value = author;
-    document.getElementById('book-edition').value = edition;
-
-    extractBtn.disabled = false;
-    extractBtn.innerText = 'Extract Title, Author & Edition';
-    alert('Extraction complete. Please review the details and edit if necessary.');
 });
 
 // C. Submission to Serverless Function
