@@ -113,9 +113,9 @@ submitFormBtn.addEventListener('click', async (event) => {
             // D. EmailJS Integration
             emailjs.init(YOUR_EMAILJS_PUBLIC_KEY);
             const templateParams = {
-                to_name: formData.name,
+                donor_name: formData.name,
                 book_title: formData.title,
-                donor_email: formData.email,
+                email: formData.email,
             };
 
             await emailjs.send(YOUR_SERVICE_ID, YOUR_TEMPLATE_ID, templateParams);
