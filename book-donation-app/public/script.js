@@ -1,3 +1,4 @@
+
 // A. Initialization and UI Handling
 const imageUpload = document.getElementById('image-upload');
 const bookImagePreview = document.getElementById('book-image-preview');
