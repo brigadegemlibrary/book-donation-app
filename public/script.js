@@ -1,4 +1,3 @@
-
 // A. Initialization and UI Handling
 const imageUpload = document.getElementById('image-upload');
 const bookImagePreview = document.getElementById('book-image-preview');
@@ -6,20 +5,11 @@ const extractBtn = document.getElementById('extract-btn');
 const donationForm = document.getElementById('donation-form');
 const donorForm = document.getElementById('donor-form');
 const submitFormBtn = document.getElementById('submit-form-btn');
-const todaysDateInput = document.getElementById('todays-date');
 
 // Your EmailJS credentials
 const YOUR_EMAILJS_PUBLIC_KEY = 'aPsEgCkKhiXYR5VQW';
 const YOUR_TEMPLATE_ID = 'template_abc456';
 const YOUR_SERVICE_ID = 'service_gmail123';
-
-// Set today's date
-const today = new Date();
-todaysDateInput.value = today.toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-});
 
 // Image preview handler
 imageUpload.addEventListener('change', (event) => {
@@ -86,15 +76,14 @@ submitFormBtn.addEventListener('click', async (event) => {
     submitFormBtn.innerText = 'Submitting...';
 
     const formData = {
-        date: todaysDateInput.value,
         title: document.getElementById('book-title').value,
         flatNumber: document.getElementById('flat-number').value,
         name: document.getElementById('donor-name').value,
         email: document.getElementById('donor-email').value,
-        author: document.getElementById('book-author').value,
-        publisher: document.getElementById('book-publisher').value,
-        edition: document.getElementById('book-edition').value,
         phone: document.getElementById('donor-phone').value,
+        author: document.getElementById('book-author').value,
+        publishingHouse: document.getElementById('book-publisher').value,
+        edition: document.getElementById('book-edition').value,
         genre: document.getElementById('book-genre').value,
         year: document.getElementById('book-year').value
     };

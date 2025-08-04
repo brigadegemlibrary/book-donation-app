@@ -3,33 +3,33 @@ const { URLSearchParams } = require('url');
 
 const googleFormUrl = "https://docs.google.com/forms/d/e/1FAIpQLSfD6XxQaH-_VUY425YdmehytiYOLMDxVBKHvAr-z6d_x29C5w/formResponse";
 const formPointers = {
-    date: 'entry.207535114',
-    title: 'entry.1065046570',
-    flatNumber: 'entry.1166974658',
-    name: 'entry.1045781291',
-    email: 'entry.839337160',
-    author: 'entry.1484740013',
-    publisher: 'entry.1852618071',
-    edition: 'entry.1624577213',
+    title: 'entry.2005620554',
+    flatNumber: 'entry.207535114',
+    name: 'entry.1065046570',
+    email: 'entry.1045781291',
+    phone: 'entry.1166974658',
+    author: 'entry.839337160',
+    publishingHouse: 'entry.1484740013',
     genre: 'entry.730415916',
-    phone: 'entry.1166974658'
+    edition: 'entry.1852618071',
+    year: 'entry.1624577213'
 };
 
 module.exports = async (request, response) => {
     try {
-        const { date, title, flatNumber, name, email, author, publisher, edition, genre, phone } = request.body;
+        const { title, flatNumber, name, email, phone, author, publishingHouse, genre, edition, year } = request.body;
 
         const formParams = new URLSearchParams();
-        formParams.append(formPointers.date, date);
         formParams.append(formPointers.title, title);
         formParams.append(formPointers.flatNumber, flatNumber);
         formParams.append(formPointers.name, name);
         formParams.append(formPointers.email, email);
-        formParams.append(formPointers.author, author);
-        formParams.append(formPointers.publisher, publisher);
-        formParams.append(formPointers.edition, edition);
-        formParams.append(formPointers.genre, genre);
         formParams.append(formPointers.phone, phone);
+        formParams.append(formPointers.author, author);
+        formParams.append(formPointers.publishingHouse, publishingHouse);
+        formParams.append(formPointers.genre, genre);
+        formParams.append(formPointers.edition, edition);
+        formParams.append(formPointers.year, year);
 
         const formResponse = await fetch(googleFormUrl, {
             method: 'POST',
